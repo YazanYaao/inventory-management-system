@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Supplier - IMS PRO</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: ltr; text-align: left; background-color: #f8f9fa; overflow-x: hidden;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #005C97 0%, #363795 100%);
+            --card-border-radius: 14px;
+        }
+
+        /* Sidebar - Fixed & Unified */
+        .sidebar {
+            min-height: 100vh; width: 260px; position: fixed; left: 0; top: 0;
+            background: var(--primary-gradient); color: white; z-index: 1000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.08); transition: 0.3s;
+        }
+        .sidebar-header { 
+            padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-header h4 { margin: 10px 0; font-size: 1.25rem; font-weight: 700; }
+        .sidebar nav a { 
+            color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 25px; 
+            display: block; transition: 0.3s; font-size: 0.95rem; font-weight: 500;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active { 
+            background: rgba(255,255,255,0.15); color: white; border-left: 5px solid #fff; padding-left: 35px;
+        }
+        .sidebar nav a i { margin-right: 12px; width: 20px; text-align: center; }
+
+        /* Main content */
+        .main-content { margin-left: 260px; padding: 95px 30px 40px; min-height: 100vh; }
+
+        /* Navbar */
+        .navbar { 
+            background: var(--primary-gradient) !important; 
+            padding: 15px 35px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            position: fixed; width: calc(100% - 260px); left: 260px; z-index: 900; top: 0; 
+        }
+        .navbar-brand { color: white !important; font-weight: 700; font-size: 1.25rem; }
+        
+        /* The Translucent Navbar Button Style */
+        .navbar .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; border-radius: 25px; padding: 8px 20px; transition: all 0.3s;
+        }
+        .navbar .btn-secondary:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+
+        .menu-btn { 
+            display: none; cursor: pointer; font-size: 22px; padding: 6px 12px; 
+            border-radius: 6px; background: rgba(255,255,255,0.2); color: white; border: none; 
+        }
+
+        /* Card Styles */
+        .card { border-radius: 15px; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.08); margin-bottom: 25px; animation: slideUp 0.5s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card-header {
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important;
+            color: #ffffff !important; font-weight: 600; padding: 14px 18px;
+            border-radius: 12px 12px 0 0 !important; display: flex; align-items: center; gap: 8px; font-size: 15px;
+        }
+        .card-header i { font-size: 16px; }
+        .card-body { padding: 30px; }
+
+        /* Form Layout - Standardized LTR */
+        .form-label { font-weight: 600; color: #495057; margin-bottom: 8px; font-size: 0.95em; }
+        .form-label .required { color: #E63946; margin-left: 3px; }
+
+        .form-control, .form-select {
+            border-radius: 25px; border: 2px solid #e9ecef;
+            padding: 12px 20px; transition: all 0.3s ease; font-size: 0.95em;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #005C97; box-shadow: 0 0 0 0.2rem rgba(0, 92, 151, 0.25); outline: none;
+        }
+
+        /* Input Icons - Flipped to Left */
+        .input-icon { position: relative; }
+        .input-icon i {
+            position: absolute; left: 20px; top: 50%;
+            transform: translateY(-50%); color: #005C97;
+        }
+        .input-icon .form-control { padding-left: 45px; }
+
+        /* Buttons */
+        .btn-primary {
+            background: #005FCC; border: none; border-radius: 25px;
+            padding: 12px 30px; font-weight: 600; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 92, 252, 0.3); color: white;
+        }
+        .btn-primary:hover { background: #0077FF; transform: translateY(-2px); color: white; }
+        .btn i { margin-right: 8px; }
+
+        /* Section Divider */
+        .section-divider { border-top: 2px dashed #e9ecef; margin: 30px 0; position: relative; }
+        .section-divider span {
+            position: absolute; top: -12px; left: 20px;
+            background: white; padding: 0 10px; color: #005C97; font-weight: 600;
+        }
+
+        /* Help Cards & Tooltips */
+        .help-card { background: #f7f9fc; border-radius: 15px; padding: 20px; margin-top: 20px; border-left: 4px solid #005C97; }
+        .help-card h6 { color: #005C97; font-weight: 600; margin-bottom: 10px; }
+        .tooltip-icon { color: #005C97; cursor: help; margin-left: 5px; }
+
+        /* Responsive Logic */
+        @media (max-width: 992px) {
+            .sidebar { left: -260px; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0 !important; }
+            .navbar { width: 100% !important; left: 0 !important; padding: 12px 16px; }
+            .menu-btn { display: inline-block; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-warehouse fa-2x mb-2"></i>
+            <h4>IMS PRO</h4>
+            <small>Welcome, <span th:text="${session.username}">Admin</span></small>
+        </div>
+        <nav>
+            <a th:href="@{/admin/dashboard}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a th:href="@{/admin/users}"><i class="fas fa-users"></i> User Management</a>
+            <a th:href="@{/admin/products}"><i class="fas fa-boxes"></i> Product Management</a>
+            <a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> Category Management</a>
+            <a th:href="@{/admin/suppliers}" class="active"><i class="fas fa-truck"></i> Supplier Management</a>
+            <a th:href="@{/admin/orders}"><i class="fas fa-shopping-cart"></i> Order Management</a>
+            <a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Fixed Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="menu-btn me-3" onclick="toggleSidebar()">☰</button>
+                <span class="navbar-brand mb-0 h5 text-white">
+                    <i class="fas fa-user-plus me-2"></i> Add New Supplier
+                </span>
+            </div>
+            <a th:href="@{/admin/suppliers}" class="btn btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+
+        <div class="content-container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-8">
+                    
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <i class="fas fa-truck"></i> Supplier Registration Form
+                        </div>
+                        <div class="card-body">
+                            
+                            <div class="alert alert-info d-flex align-items-center mb-4">
+                                <i class="fas fa-info-circle fa-lg me-3"></i>
+                                <div>
+                                    <strong>Instruction:</strong> Please fill in all required fields marked with (*) to register the new supplier in the system.
+                                </div>
+                            </div>
+
+                            <form th:action="@{/admin/suppliers/add}" method="post" th:object="${supplier}" id="addSupplierForm">
+                                
+                                <h5 class="fw-bold mb-4 text-primary d-flex align-items-center">
+                                    <i class="fas fa-info-circle me-2"></i> Basic Information
+                                </h5>
+
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">
+                                                Supplier Name <span class="required">*</span>
+                                                <i class="fas fa-question-circle tooltip-icon ms-1" 
+                                                   title="The official commercial name of the company"></i>
+                                            </label>
+                                            <div class="input-icon">
+                                                <i class="fas fa-building"></i>
+                                                <input type="text" class="form-control" id="name" 
+                                                       th:field="*{name}" placeholder="e.g. Global Tech Solutions" 
+                                                       required minlength="3" maxlength="100">
+                                            </div>
+                                            <small class="form-text">Company name as it will appear in reports.</small>
+                                            <div th:if="${#fields.hasErrors('name')}" class="text-danger mt-1">
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                <small th:errors="*{name}"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="contactInfo" class="form-label">
+                                                Contact Person <span class="required">*</span>
+                                                <i class="fas fa-question-circle tooltip-icon ms-1" 
+                                                   title="The name of the representative or manager"></i>
+                                            </label>
+                                            <div class="input-icon">
+                                                <i class="fas fa-user"></i>
+                                                <input type="text" class="form-control" id="contactInfo" 
+                                                       th:field="*{contactInfo}" placeholder="e.g. John Doe" 
+                                                       required minlength="3" maxlength="50">
+                                            </div>
+                                            <small class="form-text">Primary person in charge of this account.</small>
+                                            <div th:if="${#fields.hasErrors('contactInfo')}" class="text-danger mt-1">
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                <small th:errors="*{contactInfo}"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="section-divider">
+                                    <span>Communication Details</span>
+                                </div>
+
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="phone" class="form-label">
+                                                <span class="required">*</span> Phone Number
+                                                <i class="fas fa-question-circle tooltip-icon ms-1" title="Direct contact number"></i>
+                                            </label>
+                                            <div class="input-icon">
+                                                <i class="fas fa-phone"></i>
+                                                <input type="text" class="form-control" id="phone" 
+                                                       th:field="*{phone}" placeholder="e.g. +966 5XXXXXXXX" 
+                                                       required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">
+                                                Email Address
+                                                <i class="fas fa-question-circle tooltip-icon ms-1" title="Official correspondence email"></i>
+                                            </label>
+                                            <div class="input-icon">
+                                                <i class="fas fa-envelope"></i>
+                                                <input type="email" class="form-control" id="email" 
+                                                       th:field="*{email}" placeholder="example@company.com">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label for="address" class="form-label">Detailed Address</label>
+                                            <div class="input-icon">
+                                                <i class="fas fa-map-marker-alt" style="top: 20px; transform: none;"></i>
+                                                <textarea class="form-control" id="address" 
+                                                          th:field="*{address}" rows="3" 
+                                                          placeholder="City, District, Street name, Building number..."
+                                                          style="padding-left: 45px;"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-5">
+                                    <button type="submit" class="btn btn-primary px-5 shadow-sm" id="submitBtn">
+                                        <i class="fas fa-save me-2"></i> Save Supplier
+                                    </button>
+                                    <a th:href="@{/admin/suppliers}" class="btn btn-secondary px-5 ms-3 border-0 bg-secondary">
+                                        <i class="fas fa-times me-2"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mt-4 mb-5 bg-white">
+                        <div class="card-header bg-light text-dark border-bottom">
+                            <i class="fas fa-info-circle text-primary me-2"></i> Registration Guidelines
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="help-card m-0">
+                                        <h6><i class="fas fa-check-circle text-success me-2"></i> Key Requirements</h6>
+                                        <ul class="small text-muted mb-0">
+                                            <li>Use the official legal name of the supplier.</li>
+                                            <li>Double-check the phone number for easy contact.</li>
+                                            <li>Email is required for digital purchase orders.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="help-card m-0">
+                                        <h6><i class="fas fa-lightbulb text-warning me-2"></i> Pro Tips</h6>
+                                        <ul class="small text-muted mb-0">
+                                            <li>Assigning a contact person streamlines communication.</li>
+                                            <li>Detailed addresses help with logistics and tracking.</li>
+                                            <li>Supplier data can be updated at any time.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle for Mobile/Desktop
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Form Submit Loading State
+        document.getElementById('addSupplierForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Saving...';
+            btn.disabled = true;
+            formModified = false; // Reset modification flag on save
+        });
+
+        // Initialize Bootstrap Tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Unsaved Changes Warning Logic
+        let formModified = false;
+        const inputs = document.querySelectorAll('#addSupplierForm input, #addSupplierForm textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => formModified = true);
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (formModified) {
+                e.preventDefault();
+                e.returnValue = ''; // Standard browser warning
+            }
+        });
+
+        // Close Sidebar on Mobile when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.menu-btn');
+            if (window.innerWidth <= 768 && !sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

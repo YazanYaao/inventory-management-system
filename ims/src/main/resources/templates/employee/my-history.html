@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Operations History - IMS </title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Exact layout, flipped for English (LTR) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            direction: ltr; text-align: left; background-color: #f8f9fa; 
+        }
+        
+        /* Sidebar - Positioned Left */
+        .sidebar { 
+            min-height: 100vh; 
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%); 
+            color: white; padding: 0; position: fixed; width: 250px; left: 0; top: 0; 
+            z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
+        }
+        .sidebar-header { 
+            padding: 20px; text-align: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.12); 
+        }
+        .sidebar-header h4 { margin: 10px 0; font-size: 1.2em; font-weight: bold; }
+        
+        .sidebar nav a { 
+            color: rgba(255,255,255,0.9); text-decoration: none; padding: 15px 20px; 
+            display:block; border-bottom: 1px solid rgba(255,255,255,0.06); 
+            transition: .2s; 
+        }
+        .sidebar nav a:hover, .sidebar nav a.active { 
+            background-color: rgba(255,255,255,0.08); 
+            color: white; padding-left: 30px; border-left: 4px solid white; 
+        }
+        .sidebar nav a i { margin-right: 10px; width: 20px; text-align: center; }
+
+        /* Navbar & Main Content Alignment */
+        .navbar { 
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important; 
+            padding: 15px 30px; position: fixed; width: 100%; z-index: 900; top:0; 
+        }
+        .main-content { margin-left: 250px; padding: 110px 30px 30px; min-height: 100vh; }
+
+        /* Card & Table Styling */
+        .card { border-radius: 15px; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .card-header { 
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important; 
+            color: white; padding: 15px; border-radius: 15px 15px 0 0 !important; 
+        }
+        .table thead th { background: #f8f9ff !important; color: #333; font-weight: 700; border: none; }
+        .type-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .sidebar { left: -250px; transition: 0.3s ease-in-out; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top text-white">
+        <div class="container-fluid d-flex justify-content-between">
+            <span class="navbar-brand h5 text-white mb-0"><i class="fas fa-history me-2"></i> Activity Log</span>
+            <div class="small">
+                Staff: <span th:text="${session.username}">User</span>
+                <i class="fas fa-id-badge ms-2"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-warehouse fa-2x"></i>
+            <h4>IMS Pro</h4>
+        </div>
+        <nav>
+            <a href="/employee/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="/employee/products"><i class="fas fa-search"></i> Product Inquiry</a>
+            <a href="/employee/transactions/add"><i class="fas fa-plus-circle"></i> Add Movement</a>
+            <a href="/employee/my-history" class="active"><i class="fas fa-history"></i> My History</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="mb-4">
+                <h3 class="fw-bold text-dark">Personal Activity Archive</h3>
+                <p class="text-muted">A detailed log of all stock movements processed by your account.</p>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list-ul me-2"></i> My Stock Movement Records</span>
+                    <button class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print Report
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Date & Time</th>
+                                    <th>Product Item</th>
+                                    <th>Movement Type</th>
+                                    <th class="text-center">Qty Changed</th>
+                                    <th class="pe-4">Internal Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="t : ${transactions}">
+                                    <td class="ps-4 text-muted small">
+                                        <i class="far fa-clock me-1"></i>
+                                        <span th:text="${#temporals.format(t.transactionDate, 'yyyy-MM-dd | HH:mm')}">2023-10-01 | 10:00</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-dark" th:text="${t.product.name}">Product Name</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${t.transactionType.name() == 'PURCHASE'}" class="type-badge bg-success bg-opacity-10 text-success">
+                                            <i class="fas fa-arrow-down me-1"></i> Stock In
+                                        </span>
+                                        <span th:if="${t.transactionType.name() == 'SALE'}" class="type-badge bg-danger bg-opacity-10 text-danger">
+                                            <i class="fas fa-arrow-up me-1"></i> Stock Out
+                                        </span>
+                                        <span th:if="${t.transactionType.name() == 'RETURN'}" class="type-badge bg-primary bg-opacity-10 text-primary">
+                                            <i class="fas fa-undo me-1"></i> Return
+                                        </span>
+                                    </td>
+                                    <td class="text-center fw-bold" th:text="${t.quantity}">0</td>
+                                    <td class="text-center text-secondary" th:text="${t.previousQuantity}">0</td>
+                                    <td class="text-center text-dark fw-bold">
+                                        <span class="badge bg-light text-dark border" th:text="${t.newQuantity}">0</span>
+                                    </td>
+                                    <td class="pe-4 small text-muted">
+                                        <span th:text="${t.notes != null and t.notes != '' ? t.notes : '—'}">No notes</span>
+                                    </td>
+                                </tr>
+
+                                <tr th:if="${#lists.isEmpty(transactions)}">
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="py-4">
+                                            <i class="fas fa-folder-open fa-3x text-light mb-3"></i>
+                                            <h5 class="text-muted">No activities found</h5>
+                                            <p class="text-muted small">You haven't recorded any stock movements yet.</p>
+                                            <a href="/employee/transactions/add" class="btn btn-sm btn-primary rounded-pill mt-2">
+                                                Record First Movement
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 py-3 text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i> This log is used for internal audit purposes and cannot be edited.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

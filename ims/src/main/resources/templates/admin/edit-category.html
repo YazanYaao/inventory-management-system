@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Category - IMS PRO</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: ltr; text-align: left; background-color: #f8f9fa; overflow-x: hidden;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #005C97 0%, #363795 100%);
+            --card-border-radius: 14px;
+        }
+
+        /* Sidebar - Fixed & Unified */
+        .sidebar {
+            min-height: 100vh; width: 260px; position: fixed; left: 0; top: 0;
+            background: var(--primary-gradient); color: white; z-index: 1000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.08); transition: 0.3s;
+        }
+        .sidebar-header { 
+            padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-header h4 { margin: 10px 0; font-size: 1.25rem; font-weight: 700; }
+        .sidebar nav a { 
+            color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 25px; 
+            display: block; transition: 0.3s; font-size: 0.95rem; font-weight: 500;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active { 
+            background: rgba(255,255,255,0.15); color: white; border-left: 5px solid #fff; padding-left: 35px;
+        }
+        .sidebar nav a i { margin-right: 12px; width: 20px; text-align: center; }
+
+        /* Main content */
+        .main-content { margin-left: 260px; padding: 95px 30px 40px; min-height: 100vh; }
+
+        /* Navbar */
+        .navbar { 
+            background: var(--primary-gradient) !important; 
+            padding: 15px 35px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            position: fixed; width: calc(100% - 260px); left: 260px; z-index: 900; top: 0; 
+        }
+        .navbar-brand { color: white !important; font-weight: 700; font-size: 1.25rem; }
+        
+        /* The Translucent Navbar Button Style */
+        .navbar .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; border-radius: 25px; padding: 8px 20px; transition: all 0.3s;
+        }
+        .navbar .btn-secondary:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+
+        .menu-btn { 
+            display: none; cursor: pointer; font-size: 22px; padding: 6px 12px; 
+            border-radius: 6px; background: rgba(255,255,255,0.2); color: white; border: none; 
+        }
+
+        /* Card & Animation Styles */
+        .card { border-radius: 15px; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.08); margin-bottom: 25px; animation: slideUp 0.5s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card-header {
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important;
+            color: #ffffff !important; font-weight: 600; padding: 14px 18px;
+            border-radius: 12px 12px 0 0 !important; display: flex; align-items: center; gap: 8px; font-size: 15px;
+        }
+        .card-header i { font-size: 16px; margin-right: 8px; }
+        .card-body { padding: 30px; }
+
+        /* Form Controls - English LTR Alignment */
+        .form-label { font-weight: 600; color: #495057; margin-bottom: 8px; font-size: 0.95em; }
+        .form-label .required { color: #E63946; margin-left: 3px; }
+
+        .form-control, .form-select {
+            border-radius: 25px; border: 2px solid #e9ecef; padding: 12px 20px;
+            transition: all 0.3s ease; font-size: 0.95em;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #005C97; box-shadow: 0 0 0 0.2rem rgba(0, 92, 151, 0.25); outline: none;
+        }
+
+        /* Input Icons - Flipped to Left for LTR */
+        .input-icon { position: relative; }
+        .input-icon i {
+            position: absolute; left: 20px; top: 50%;
+            transform: translateY(-50%); color: #005C97;
+        }
+        .input-icon .form-control { padding-left: 45px; }
+
+        /* Buttons */
+        .btn-primary {
+            background: #005FCC; border: none; border-radius: 25px;
+            padding: 12px 30px; font-weight: 600; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 92, 252, 0.3); color: white;
+        }
+        .btn-primary:hover { background: #0077FF; transform: translateY(-2px); color: white; }
+        .btn i { margin-right: 8px; }
+
+        /* Section Divider */
+        .section-divider { border-top: 2px dashed #e9ecef; margin: 30px 0; position: relative; }
+        .section-divider span {
+            position: absolute; top: -12px; left: 20px;
+            background: white; padding: 0 10px; color: #005C97; font-weight: 600;
+        }
+
+        /* Info Box - Flipped Border */
+        .info-box {
+            background: #f7f9fc; border-radius: 15px; padding: 15px 20px;
+            margin-bottom: 20px; border-left: 4px solid #005C97;
+        }
+        .info-box h6 { color: #005C97; font-weight: 600; margin-bottom: 8px; }
+
+        /* Responsive Sidebar Logic */
+        @media (max-width: 992px) {
+            .sidebar { left: -260px; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0 !important; }
+            .navbar { width: 100% !important; left: 0 !important; padding: 12px 16px; }
+            .menu-btn { display: inline-block; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-warehouse fa-2x mb-2"></i>
+            <h4>IMS PRO</h4>
+            <small>Welcome, <span th:text="${session.username}">Admin</span></small>
+        </div>
+        <nav>
+            <a th:href="@{/admin/dashboard}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a th:href="@{/admin/users}"><i class="fas fa-users"></i> User Management</a>
+            <a th:href="@{/admin/products}"><i class="fas fa-boxes"></i> Product Management</a>
+            <a th:href="@{/admin/categories}" class="active"><i class="fas fa-tags"></i> Category Management</a>
+            <a th:href="@{/admin/suppliers}"><i class="fas fa-truck"></i> Supplier Management</a>
+            <a th:href="@{/admin/orders}"><i class="fas fa-shopping-cart"></i> Order Management</a>
+            <a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <!-- Fixed Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="menu-btn me-3" onclick="toggleSidebar()">☰</button>
+                <span class="navbar-brand mb-0 h5 text-white">
+                    <i class="fas fa-edit me-2"></i> Edit Category
+                </span>
+            </div>
+            <a th:href="@{/admin/categories}" class="btn btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+
+        <div class="content-container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-8">
+                    
+                    <div class="info-box shadow-sm mb-4">
+                        <h6 class="d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2"></i> Current Category Record
+                        </h6>
+                        <p class="small mb-0 text-muted">
+                            <strong>Category:</strong> <span th:text="${category.name}" class="text-primary fw-bold">Electronics</span> | 
+                            <strong>Linked Products:</strong> 
+                            <span th:text="${category.products != null ? #lists.size(category.products) : 0}" class="badge bg-secondary">0</span> 
+                            items currently in this category.
+                        </p>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <i class="fas fa-tags"></i> Update Category Information
+                        </div>
+                        <div class="card-body p-4 p-md-5">
+                            
+                            <div class="alert alert-info d-flex align-items-center mb-4 border-0">
+                                <i class="fas fa-lightbulb fa-lg me-3"></i>
+                                <div>
+                                    <strong>Quick Tip:</strong> Updating the category name will immediately reflect across all linked products in the inventory.
+                                </div>
+                            </div>
+
+                            <form th:action="@{/admin/categories/edit/{id}(id=${category.id})}" 
+                                  method="post" th:object="${category}" id="editCategoryForm">
+                                
+                                <h5 class="fw-bold mb-4 text-primary d-flex align-items-center">
+                                    <i class="fas fa-id-card me-2"></i> Basic Information
+                                </h5>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">
+                                                Category Name <span class="required">*</span>
+                                                <i class="fas fa-question-circle tooltip-icon ms-1" 
+                                                   title="Use a clear, distinct name to help organize products"></i>
+                                            </label>
+                                            <div class="input-icon">
+                                                <i class="fas fa-tag"></i>
+                                                <input type="text" class="form-control" id="name" 
+                                                       th:field="*{name}" placeholder="e.g. Computer Accessories" 
+                                                       required minlength="2" maxlength="50">
+                                            </div>
+                                            <small class="form-text text-muted">Ensure the name is unique to avoid duplication.</small>
+                                            
+                                            <div th:if="${#fields.hasErrors('name')}" class="text-danger mt-1">
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                <small th:errors="*{name}"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-5">
+                                    <button type="submit" class="btn btn-primary px-5 shadow-sm" id="submitBtn">
+                                        <i class="fas fa-save me-2"></i> Update Category
+                                    </button>
+                                    <a th:href="@{/admin/categories}" class="btn btn-secondary px-5 ms-3 border-0 bg-secondary">
+                                        <i class="fas fa-times me-2"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mt-4 mb-5 bg-white">
+                        <div class="card-header bg-light text-dark border-bottom">
+                            <i class="fas fa-shield-alt text-primary me-2"></i> Management Guidelines
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-4">
+                                <div class="col-md-6 border-end">
+                                    <h6 class="fw-bold text-primary small mb-2"><i class="fas fa-check-circle me-1"></i> Data Integrity</h6>
+                                    <p class="text-muted small mb-0">Updates are immediate. Ensure the new category name is descriptive enough for warehouse staff to identify items quickly.</p>
+                                </div>
+                                <div class="col-md-6 ps-md-4">
+                                    <h6 class="fw-bold text-danger small mb-2"><i class="fas fa-exclamation-triangle me-1"></i> Deletion Note</h6>
+                                    <p class="text-muted small mb-0">You can rename categories freely, but the system will block deletion if any products are still assigned to this category.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle Logic
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+            const menuBtn = document.querySelector('.menu-btn');
+            if (menuBtn) {
+                menuBtn.innerHTML = sidebar.classList.contains('active') ? "✖" : "☰";
+            }
+        }
+
+        // Form Submission Loading State
+        document.getElementById('editCategoryForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Saving Changes...';
+            btn.disabled = true;
+            formModified = false; // Reset modification flag
+        });
+
+        // Tooltip Initialization
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Unsaved Changes Alert
+        let formModified = false;
+        document.getElementById('name').addEventListener('input', () => formModified = true);
+
+        window.addEventListener('beforeunload', function (e) {
+            if (formModified) {
+                e.preventDefault();
+                e.returnValue = ''; // Standard browser prompt
+            }
+        });
+
+        // Mobile: Close sidebar when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.menu-btn');
+            if (window.innerWidth <= 768 && !sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

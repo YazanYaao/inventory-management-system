@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Inquiry - IMS Pro</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Precision alignment for English LTR */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: ltr; text-align: left; background-color: #f8f9fa; overflow-x: hidden;
+        }
+
+        /* Sidebar - Positioned Left */
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%);
+            color: white; padding: 0; position: fixed; width: 250px; left: 0; top: 0;
+            z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar-header { 
+            padding: 20px; text-align: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.12); 
+            background: rgba(0,0,0,0.06); 
+        }
+        .sidebar-header h4 { margin: 10px 0; font-size: 1.2em; font-weight: bold; }
+        .sidebar nav a { 
+            color: rgba(255,255,255,0.9); text-decoration: none; padding: 15px 20px; 
+            display:block; border-bottom: 1px solid rgba(255,255,255,0.06); 
+            transition: .2s; font-size: .95em; 
+        }
+        .sidebar nav a:hover, .sidebar nav a.active { 
+            background-color: rgba(255,255,255,0.08); 
+            color: white; padding-left: 30px; border-left: 4px solid white; 
+        }
+        .sidebar nav a i { margin-right: 10px; width: 20px; text-align:center; }
+
+        /* Main content offset for LTR */
+        .main-content { margin-left: 250px; padding: 90px 20px 20px; min-height: 100vh; }
+
+        /* Navbar */
+        .navbar { 
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important; 
+            padding: 15px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            position: fixed; width: 100%; z-index: 900; top:0; 
+        }
+        .navbar-brand { color: white !important; font-weight: bold; font-size: 1.1em; }
+        
+        /* Table & Card Components */
+        .card { border-radius: 15px; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .card-header {
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important;
+            color: #ffffff !important; font-weight: 600; padding: 14px 18px; border-radius: 12px 12px 0 0 !important;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .table thead th { background: #f1f4f9 !important; color: #333; border: none; padding: 15px; }
+        .table tbody td { vertical-align: middle; padding: 12px 15px; border-top: 1px solid #eee; }
+        
+        /* Search Box */
+        .search-box {
+            background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px;
+        }
+        .form-control-lg { border-radius: 10px; font-size: 1rem; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="navbar-brand mb-0 h5 text-white"><i class="fas fa-search me-2"></i>Product Inquiry</span>
+            </div>
+            <div class="text-white small">
+                <i class="fas fa-user me-1"></i> Staff: <span th:text="${session.username}">User</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-warehouse fa-2x"></i>
+            <h4>IMS</h4>
+        </div>
+        <nav>
+            <a href="/employee/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="/employee/products" class="active"><i class="fas fa-search"></i> Product Inquiry</a>
+            <a href="/employee/transactions/add"><i class="fas fa-plus-circle"></i> Add Movement</a>
+            <a href="/employee/my-history"><i class="fas fa-history"></i> My History</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            
+            <div class="d-flex justify-content-between align-items-end mb-4 pb-2 border-bottom border-2">
+                <div>
+                    <h2 class="fw-bold text-dark mb-0" style="letter-spacing: -1px;">General Stock Inquiries</h2>
+                    <p class="text-muted mb-0 mt-1">View and monitor all inventory items currently in system records</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-dark rounded-pill px-3 py-2 shadow-sm">
+                        <i class="fas fa-database me-1 text-success"></i> Database: Connected
+                    </span>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-body p-4">
+                    <form th:action="@{/employee/products}" method="get" class="row g-3 align-items-center">
+                        <div class="col-md-9">
+                            <label class="form-label fw-bold text-secondary small">Search for a specific product</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-barcode text-muted"></i></span>
+                                <input type="text" name="search" class="form-control form-control-lg bg-light border-start-0" 
+                                       placeholder="Enter product name or SKU code..." th:value="${search}" style="font-size: 1rem;">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label d-none d-md-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-lg w-100 fw-bold text-white shadow" 
+                                    style="background: linear-gradient(135deg, #005C97 0%, #363795 100%); border: none; border-radius: 10px;">
+                                <i class="fas fa-filter me-2"></i> Run Inquiry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 15px;">
+                <div class="card-header border-0 d-flex justify-content-between align-items-center" 
+                     style="background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important; padding: 18px 25px;">
+                    <h5 class="mb-0 text-white fw-bold"><i class="fas fa-table me-2"></i> Detailed Inventory Stock Table</h5>
+                    <div>
+                        <button class="btn btn-sm btn-light rounded-pill px-3 fw-bold" type="button" onclick="location.reload();">
+                             Refresh Data <i class="fas fa-sync-alt ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 py-3 text-dark fw-bold border-bottom">SKU Code</th>
+                                <th class="py-3 text-dark fw-bold border-bottom">Description & Name</th>
+                                <th class="py-3 text-dark fw-bold border-bottom">Category</th>
+                                <th class="py-3 text-dark fw-bold border-bottom">Stock Level</th>
+                                <th class="py-3 text-dark fw-bold border-bottom">Unit Price</th>
+                                <th class="pe-4 py-3 text-dark fw-bold border-bottom text-center">Operational Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="product : ${products}" class="border-bottom-0">
+                                <td class="ps-4">
+                                    <code class="text-primary fw-bold" th:text="${product.sku}">#SKU-000</code>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark d-block" th:text="${product.name}">Product Name</span>
+                                    <small class="text-muted">Last update: <span th:text="${#temporals.format(#temporals.createNow(), 'MMM dd')}"></span></small>
+                                </td>
+                                <td><span class="text-secondary" th:text="${product.category.name}">General</span></td>
+                                <td>
+                                    <span class="fs-5 fw-bold" th:classappend="${product.stockQuantity <= 10 ? 'text-danger' : 'text-dark'}" 
+                                          th:text="${product.stockQuantity}">0</span>
+                                    <small class="text-muted ms-1">Units</small>
+                                </td>
+                                <td class="fw-bold" th:text="${product.price} + ' TL'"></td>
+                                <td class="pe-4 text-center">
+                                    <span th:if="${product.stockQuantity > 10}" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold disabled opacity-100">
+                                        <i class="fas fa-check-circle me-1"></i> Healthy
+                                    </span>
+                                    <span th:if="${product.stockQuantity <= 10 and product.stockQuantity > 0}" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold disabled opacity-100">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> Critical
+                                    </span>
+                                    <span th:if="${product.stockQuantity == 0}" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold disabled opacity-100">
+                                        <i class="fas fa-times-circle me-1"></i> Out of Stock
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(products)}">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-search fa-3x mb-3 opacity-25"></i>
+                                    <p>No products found matching your search criteria.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card-footer bg-white py-3 border-top-0">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 small text-muted">
+                            Showing <span class="fw-bold" th:text="${products.size()}">0</span> total items registered in system.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar toggle logic if needed for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

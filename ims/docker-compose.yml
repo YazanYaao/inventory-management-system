@@ -1,0 +1,55 @@
+services:
+  # ============================================================
+  # 1. MySQL Database Service
+  # ============================================================
+  ims-mysql:
+    image: mysql:8.0
+    container_name: ims-database
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: inventory_system
+      MYSQL_USER: ims_user
+      MYSQL_PASSWORD: ims_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - ims-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================
+  # 2. Spring Boot Application Service
+  # ============================================================
+  ims-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ims-application
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://ims-mysql:3306/inventory_system?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ims_user
+      SPRING_DATASOURCE_PASSWORD: ims_password
+      SERVER_PORT: 8080
+    depends_on:
+      ims-mysql:
+        condition: service_healthy
+    networks:
+      - ims-network
+
+networks:
+  ims-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local

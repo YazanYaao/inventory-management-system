@@ -1,0 +1,80 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # ============================================================
+  # Job 1: Build, Unit & Integration Tests
+  # ============================================================
+  build-and-test:
+    name: Build & Test (Java 17)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Eclipse Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Make Maven Wrapper Executable
+        run: |
+          if [ -d "ims" ]; then
+            chmod +x ims/mvnw
+          else
+            chmod +x mvnw
+          fi
+
+      - name: Run Automated Test Suite
+        run: |
+          if [ -d "ims" ]; then
+            cd ims && ./mvnw test -B
+          else
+            ./mvnw test -B
+          fi
+
+      - name: Package Spring Boot Application
+        run: |
+          if [ -d "ims" ]; then
+            cd ims && ./mvnw package -DskipTests -B
+          else
+            ./mvnw package -DskipTests -B
+          fi
+
+      - name: Publish Test Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surefire-test-reports
+          path: '**/target/surefire-reports/'
+
+  # ============================================================
+  # Job 2: Docker Build Verification
+  # ============================================================
+  docker-build:
+    name: Docker Build Verification
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Verify Docker Container Build
+        run: |
+          if [ -d "ims" ]; then
+            docker build -t ims-application:latest ./ims
+          else
+            docker build -t ims-application:latest .
+          fi

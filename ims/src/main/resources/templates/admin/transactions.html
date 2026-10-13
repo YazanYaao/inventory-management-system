@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - IMS PRO</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: ltr; text-align: left; background-color: #f8f9fa; overflow-x: hidden;
+        }
+
+        /* Sidebar - Positioned Left */
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%);
+            color: white; padding: 0; position: fixed; width: 250px; left: 0; top: 0;
+            z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .sidebar-header { 
+            padding: 20px; text-align: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.12); 
+            background: rgba(0,0,0,0.06); 
+        }
+        .sidebar-header h4 { margin: 10px 0; font-size: 1.2em; font-weight: bold; }
+        .sidebar nav a { 
+            color: rgba(255,255,255,0.9); text-decoration: none; padding: 15px 20px; 
+            display:block; border-bottom: 1px solid rgba(255,255,255,0.06); 
+            transition: .2s; font-size: .95em; 
+        }
+        .sidebar nav a:hover, .sidebar nav a.active { 
+            background-color: rgba(255,255,255,0.08); 
+            color: white; padding-left: 30px; border-left: 4px solid white; 
+        }
+        .sidebar nav a i { margin-right: 10px; width: 20px; text-align:center; }
+
+        /* Main content - Margin Left for LTR */
+        .main-content { margin-left: 250px; padding: 90px 20px 20px; min-height: 100vh; transition: all 0.3s ease; }
+
+        /* Navbar */
+        .navbar { 
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important; 
+            padding: 15px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; position: fixed; width: 100%; z-index: 900; top:0; 
+        }
+        .navbar-brand { color: white !important; font-weight: bold; font-size: 1.1em; }
+        .menu-btn { 
+            display: none; cursor: pointer; font-size: 22px; padding: 6px 12px; 
+            border-radius:6px; background: #0454b0; color:white; border:none; 
+        }
+
+        /* Stats cards - The design you liked */
+        .dashboard-stat { text-align:center; padding:28px; border-radius:16px; color:white; margin-bottom:20px; transition:transform .25s; }
+        .dashboard-stat:hover { transform: scale(1.03); }
+        .stat-total { background:#0077B6; }
+        .stat-in { background:#3BB273; }
+        .stat-out { background:#E63946; }
+        .stat-adjustment { background:#F4A261; }
+
+        /* Timeline Design - Adjusted for LTR */
+        .timeline-item {
+            border-left: 3px solid #005C97; padding: 15px 20px; margin-bottom: 20px;
+            position: relative; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -8px; top: 20px;
+            width: 13px; height: 13px; background: #005C97; border-radius: 50%; border: 3px solid white;
+        }
+        .timeline-item.in::before { background: #3BB273; }
+        .timeline-item.out::before { background: #E63946; }
+        .timeline-item.adjustment::before { background: #F4A261; }
+
+        @media (max-width: 768px) {
+            .sidebar { left: -250px; }
+            .sidebar.active { left: 0; }
+            .menu-btn { display:inline-block; }
+            .main-content { margin-left: 0 !important; padding-top: 120px; }
+
+            
+        }
+
+        /* Badge & Control Styling - LTR */
+        .badge { border-radius: 15px; padding: 8px 12px; font-weight: 600; font-size: 0.85em; }
+        .badge-in { background: linear-gradient(135deg, #3BB273 0%, #2D9561 100%); color: white; }
+        .badge-out { background: linear-gradient(135deg, #E63946 0%, #D62828 100%); color: white; }
+        .badge-adjustment { background: linear-gradient(135deg, #F4A261 0%, #E76F51 100%); color: white; }
+
+        .search-box, .filter-select { border-radius: 25px; border: 2px solid #e9ecef; padding: 10px 20px; transition: all 0.3s; }
+        .search-box { width: 300px; }
+        .filter-select { width: 200px; padding-left: 15px; }
+        
+        .qty-change { font-weight: bold; }
+        .qty-change.positive { color: #3BB273; }
+        .qty-change.negative { color: #E63946; }
+
+        /* View Toggle Switch */
+        .view-toggle { background: white; border-radius: 25px; padding: 5px; display: inline-flex; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .view-toggle button { border: none; background: transparent; padding: 8px 20px; border-radius: 20px; transition: 0.3s; font-weight: 600; color: #6c757d; }
+        .view-toggle button.active { background: linear-gradient(135deg, #005C97 0%, #363795 100%); color: white; }
+
+        .btn-export { background: linear-gradient(135deg, #3BB273 0%, #2D9561 100%); border: none; border-radius: 25px; padding: 10px 25px; color: white; font-weight: 600; transition: all 0.3s; }
+        .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(59, 178, 115, 0.4); color: white; }
+
+        .date-badge { background: #f8f9fa; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; color: #6c757d; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-warehouse fa-2x"></i>
+            <h4>IMS</h4>
+            <small>Welcome, <span th:text="${session.username}">Admin</span></small>
+        </div>
+        <nav>
+            <a th:href="@{/admin/dashboard}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a th:href="@{/admin/users}"><i class="fas fa-users"></i> User Management</a>
+            <a th:href="@{/admin/products}"><i class="fas fa-boxes"></i> Product Management</a>
+            <a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> Category Management</a>
+            <a th:href="@{/admin/suppliers}" ><i class="fas fa-truck"></i> Supplier Management</a>
+            <a th:href="@{/admin/transactions}"class="active"><i class="fas fa-exchange-alt"></i> Transaction Logs</a>
+            <a th:href="@{/logout}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="menu-btn me-3" onclick="toggleSidebar()">☰</button>
+                <span class="navbar-brand mb-0 h5 text-white">
+                    <i class="fas fa-exchange-alt me-2"></i> Transaction Logs
+                </span>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="view-toggle d-none d-md-inline-flex">
+                    <button onclick="switchView('table')" id="tableViewBtn" class="active">
+                        <i class="fas fa-table me-1"></i> Table
+                    </button>
+                    <button onclick="switchView('timeline')" id="timelineViewBtn">
+                        <i class="fas fa-stream me-1"></i> Timeline
+                    </button>
+                </div>
+
+                <button class="btn btn-export" onclick="exportTransactions()">
+                    <i class="fas fa-file-export me-1"></i> Export CSV
+                </button>
+            </div>
+        </div>
+    </nav>
+<div class="main-content">
+        <!-- Stats Section -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-stat stat-total">
+                    <i class="fas fa-receipt fa-2x mb-2"></i>
+                    <h4 class="fw-bold mb-1" th:text="${#lists.size(transactions)}">0</h4>
+                    <p class="mb-0">Total Records</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-stat stat-in">
+                    <i class="fas fa-arrow-circle-down fa-2x mb-2"></i>
+                    <h4 class="fw-bold mb-1" id="inCount">0</h4>
+                    <p class="mb-0">Total Inbound</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-stat stat-out">
+                    <i class="fas fa-arrow-circle-up fa-2x mb-2"></i>
+                    <h4 class="fw-bold mb-1" id="outCount">0</h4>
+                    <p class="mb-0">Total Outbound</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="dashboard-stat stat-adjustment">
+                    <i class="fas fa-tools fa-2x mb-2"></i>
+                    <h4 class="fw-bold mb-1" id="adjustmentCount">0</h4>
+                    <p class="mb-0">Adjustments</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <i class="fas fa-filter text-primary me-2"></i>
+                <span class="text-dark fw-bold">Audit Trail Filters</span>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/admin/transactions}" method="get" class="row g-3">
+                    <!-- Keyword Search -->
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold small text-muted">Keyword Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" name="search" 
+                                   th:value="${search}" placeholder="Search product, SKU, or operator...">
+                        </div>
+                    </div>
+                    <!-- Movement Type Filter -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small text-muted">Movement Type</label>
+                        <select class="form-select" name="type">
+                            <option value="">All Transactions</option>
+                            <option value="PURCHASE" th:selected="${type == 'PURCHASE'}">Purchases (In)</option>
+                            <option value="SALE" th:selected="${type == 'SALE'}">Sales (Out)</option>
+                            <option value="ADDITION" th:selected="${type == 'ADDITION'}">Stock Addition</option>
+                            <option value="WITHDRAWAL" th:selected="${type == 'WITHDRAWAL'}">Stock Withdrawal</option>
+                            <option value="ADJUSTMENT" th:selected="${type == 'ADJUSTMENT'}">Adjustments</option>
+                        </select>
+                    </div>
+                    <!-- Form Actions -->
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                            <i class="fas fa-filter me-1"></i> Apply
+                        </button>
+                        <a th:href="@{/admin/transactions}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Active Filter Tags -->
+                <div class="mt-3" th:if="${(search != null && search != '') || (type != null && type != '')}">
+                    <span class="badge bg-light text-dark border me-2 p-2" th:if="${search != null && search != ''}">
+                        Search: <strong th:text="${search}"></strong>
+                    </span>
+                    <span class="badge bg-light text-dark border p-2" th:if="${type != null && type != ''}">
+                        Type: <strong th:text="${type}"></strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="card shadow-sm border-0 mb-5" id="tableView">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <span class="text-dark fw-bold"><i class="fas fa-list-ul me-2 text-primary"></i> Detailed Movement Logs</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4" style="width: 50px;">#</th>
+                                <th style="width: 180px;">Timestamp</th>
+                                <th>Product Information</th>
+                                <th class="text-center">Transaction Type</th>
+                                <th class="text-center">Quantity</th>
+                                <th>Processed By</th>
+                                <th class="pe-4">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- الجزء الثالث (3/4) المحدث والمصلح -->
+                            <tr th:if="${#lists.isEmpty(transactions)}">
+                                <td colspan="7" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-box-open fa-3x mb-3"></i>
+                                        <h5>No records found</h5>
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <tr th:each="transaction, iter : ${transactions}">
+                                <td class="ps-4 text-muted small" th:text="${iter.count}"></td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="date-badge mb-1">
+                                            <i class="far fa-calendar-alt me-1"></i>
+                                            <span th:text="${#temporals.format(transaction.transactionDate, 'yyyy-MM-dd')}"></span>
+                                        </span>
+                                        <small class="text-muted ps-2" th:text="${#temporals.format(transaction.transactionDate, 'HH:mm')}"></small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <strong class="text-dark" th:text="${transaction.product.name}">Product</strong>
+                                        <small class="text-muted" style="font-size: 0.8em;">SKU: <span th:text="${transaction.product.sku}"></span></small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <!-- الحل: استخدمنا .name() بدلاً من .displayName لطاعة الإنجليزية -->
+                                    <span class="badge" 
+                                          th:classappend="${transaction.transactionType.name() == 'PURCHASE' || transaction.transactionType.name() == 'ADDITION' ? 'badge-in' : 
+                                                           transaction.transactionType.name() == 'SALE' || transaction.transactionType.name() == 'WITHDRAWAL' ? 'badge-out' : 'badge-adjustment'}">
+                                        <i th:class="${transaction.transactionType.name() == 'PURCHASE' || transaction.transactionType.name() == 'ADDITION' ? 'fas fa-arrow-down' : 
+                                                      transaction.transactionType.name() == 'SALE' || transaction.transactionType.name() == 'WITHDRAWAL' ? 'fas fa-arrow-up' : 'fas fa-sliders-h'}"></i>
+                                        <span class="ms-1" th:text="${transaction.transactionType.name()}">Type</span>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="qty-change" 
+                                          th:classappend="${transaction.transactionType.name() == 'PURCHASE' || transaction.transactionType.name() == 'ADDITION' ? 'positive' : 'negative'}">
+                                        <span th:text="${transaction.transactionType.name() == 'PURCHASE' || transaction.transactionType.name() == 'ADDITION' ? '+' : '-'}"></span>
+                                        <span th:text="${transaction.quantity}">0</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="fas fa-user-circle me-1 text-primary"></i>
+                                        <!-- تم تغيير هذا الجزء ليتوافق مع الـ JsonIgnore -->
+                                        <span th:text="${transaction.user != null ? transaction.user.username : 'System'}">Operator</span>
+                                    </div>
+                                </td>
+                                <td class="pe-4">
+                                    <span th:text="${transaction.notes != null && transaction.notes != '' ? transaction.notes : '—'}" 
+                                          class="text-muted small fst-italic"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline View (Hidden by default) -->
+        <div class="card shadow-sm border-0 mb-5" id="timelineView" style="display: none;">
+            <div class="card-header bg-white border-bottom fw-bold py-3">
+                <i class="fas fa-stream me-2 text-primary"></i> Activity Timeline feed
+            </div>
+            <div class="card-body">
+                <!-- سيتم وضع محتوى الـ Timeline في الجزء الأخير مع الـ JavaScript -->
+
+                <div class="card-body">
+                <!-- حلقة تكرار الـ Timeline -->
+                <div th:each="transaction : ${transactions}" class="mb-4 position-relative ps-4 border-start border-2"
+                     th:style="'border-color: ' + (${transaction.transactionType.name() == 'PURCHASE' || transaction.transactionType.name() == 'ADDITION' ? '#1cc88a' : '#e74a3b'}) + ' !important;'">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1 fw-bold">
+                                <span th:text="${transaction.product.name}">Product</span>
+                                <!-- ابحث عن هذا السطر في الجزء الثالث من الـ HTML وقم بتعديله -->
+                                <span class="ms-1" th:text="${transaction.transactionType.name()}">Type</span>
+                            </h6>
+                            <p class="mb-1 small">
+                                Quantity: <strong th:text="${transaction.quantity}">0</strong> | 
+                                Operator: <span th:text="${transaction.user != null ? transaction.user.username : 'System'}"></span>
+                            </p>
+                            <p class="mb-0 text-muted small fst-italic" th:if="${transaction.notes}" th:text="${transaction.notes}"></p>
+                        </div>
+                        <span class="date-badge" th:text="${#temporals.format(transaction.transactionDate, 'MMM dd, HH:mm')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- End Main Content -->
+
+    </div> 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // بيانات مسطحة من السيرفر (تجنب مشاكل التسلسل الدائري)
+        const transactions = /*[[${transactionsJson}]]*/ [];
+
+        // 1. تبديل العرض بين الجدول والجدول الزمني
+        function switchView(view) {
+            const tableView = document.getElementById('tableView');
+            const timelineView = document.getElementById('timelineView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const timelineBtn = document.getElementById('timelineViewBtn');
+
+            if (view === 'table') {
+                tableView.style.display = 'block';
+                timelineView.style.display = 'none';
+                tableBtn.classList.add('active');
+                timelineBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'none';
+                timelineView.style.display = 'block';
+                tableBtn.classList.remove('active');
+                timelineBtn.classList.add('active');
+            }
+        }
+
+        // 2. حساب الإحصائيات التلقائي عند تحميل الصفحة
+        function calculateStats() {
+            let ins = 0, outs = 0, adjusts = 0;
+            transactions.forEach(t => {
+                const type = t.type;
+                if (type === 'PURCHASE' || type === 'ADDITION' || type === 'RETURN') ins++;
+                else if (type === 'SALE' || type === 'WITHDRAWAL') outs++;
+                else if (type === 'ADJUSTMENT') adjusts++;
+            });
+            document.getElementById('inCount').textContent = ins;
+            document.getElementById('outCount').textContent = outs;
+            document.getElementById('adjustmentCount').textContent = adjusts;
+        }
+
+        // 3. تصدير البيانات إلى ملف CSV
+        function exportTransactions() {
+            if (!transactions || transactions.length === 0) {
+                alert('No transaction data to export.');
+                return;
+            }
+            let csv = '\ufeffDate,Product,SKU,Type,Quantity,User,Notes\n';
+            transactions.forEach(t => {
+                const date = t.date || '';
+                const productName = (t.productName || 'N/A').replace(/"/g, '""');
+                const sku = (t.sku || 'N/A').replace(/"/g, '""');
+                const type = t.type || 'N/A';
+                const quantity = t.quantity || 0;
+                const username = (t.username || 'System').replace(/"/g, '""');
+                const notes = (t.notes || '-').replace(/"/g, '""');
+                csv += `"${date}","${productName}","${sku}","${type}","${quantity}","${username}","${notes}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'IMS_Audit_Report_' + new Date().toISOString().split('T')[0] + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // تشغيل الوظائف عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', calculateStats);
+        /*]]>*/
+    </script>
+</body>
+</html>

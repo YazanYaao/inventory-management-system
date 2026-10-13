@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Movement - IMS Pro</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Maintaining your exact style, flipped for English LTR */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: ltr; text-align: left; background-color: #f8f9fa; overflow-x: hidden;
+        }
+
+        /* Sidebar - Positioned Left */
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%);
+            color: white; padding: 0; position: fixed; width: 250px; left: 0; top: 0;
+            z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar-header { 
+            padding: 20px; text-align: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.12); 
+            background: rgba(0,0,0,0.06); 
+        }
+        .sidebar-header h4 { margin: 10px 0; font-size: 1.2em; font-weight: bold; }
+        .sidebar nav a { 
+            color: rgba(255,255,255,0.9); text-decoration: none; padding: 15px 20px; 
+            display:block; border-bottom: 1px solid rgba(255,255,255,0.06); 
+            transition: .2s; font-size: .95em; 
+        }
+        .sidebar nav a:hover, .sidebar nav a.active { 
+            background-color: rgba(255,255,255,0.08); 
+            color: white; padding-left: 30px; border-left: 4px solid white; 
+        }
+        .sidebar nav a i { margin-right: 10px; width: 20px; text-align:center; }
+
+        /* Navbar */
+        .navbar { 
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important; 
+            padding: 15px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; position: fixed; width: 100%; z-index: 900; top:0; 
+        }
+        .navbar-brand { color: white !important; font-weight: bold; font-size: 1.1em; }
+
+        /* Main content - Shifted for LTR */
+        .main-content { margin-left: 250px; padding: 110px 30px 30px; min-height: 100vh; }
+
+        /* Card & Forms */
+        .card { border-radius: 12px; border: none; box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .card-header {
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%) !important;
+            color: #ffffff !important; font-weight: 600; padding: 14px 18px; border-radius: 12px 12px 0 0 !important;
+        }
+        .form-label { font-weight: 600; color: #444; }
+        .form-control, .form-select { border-radius: 8px; padding: 12px; border: 1px solid #ddd; }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #005C97 0%, #363795 100%);
+            color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="navbar-brand mb-0 h5 text-white"><i class="fas fa-plus-circle me-2"></i>Record Stock Movement</span>
+            </div>
+            <div class="text-white small">
+                <i class="fas fa-user me-1"></i> Staff: <span th:text="${session.username}">User</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-warehouse fa-2x"></i>
+            <h4>IMS</h4>
+        </div>
+        <nav>
+            <a href="/employee/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="/employee/products"><i class="fas fa-search"></i> Product Inquiry</a>
+            <a href="/employee/transactions/add" class="active"><i class="fas fa-plus-circle"></i> Record Movement</a>
+            <a href="/employee/my-history"><i class="fas fa-history"></i> My History</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header">
+                            <i class="fas fa-edit me-2"></i> Stock Movement Registration Form
+                        </div>
+                        <div class="card-body p-4 p-md-5">
+                            
+                            <form th:action="@{/employee/transactions/add}" th:object="${transaction}" method="post">
+                                <div class="row g-4">
+                                    
+                                    <div class="col-12">
+                                        <label class="form-label">Product <span class="text-danger">*</span></label>
+                                        <select th:field="*{product.id}" class="form-select shadow-sm" required>
+                                            <option value="" disabled selected>Select a product from the list...</option>
+                                            <option th:each="p : ${products}" th:value="${p.id}" 
+                                                    th:text="${p.name} + ' (Available: ' + ${p.stockQuantity} + ')'"></option>
+                                        </select>
+                                        <div class="form-text mt-2 small text-muted">
+                                            Only products currently assigned to your inventory group are shown.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Movement Type <span class="text-danger">*</span></label>
+                                        <select th:field="*{transactionType}" class="form-select shadow-sm" required>
+                                            <option value="PURCHASE">Stock In (Inbound/Addition)</option>
+                                            <option value="SALE">Stock Out (Outbound/Withdrawal)</option>
+                                            <option value="RETURN">Return (Restock/Refund)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                        <input type="number" th:field="*{quantity}" class="form-control shadow-sm" 
+                                               placeholder="Enter amount" min="1" required>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Internal Notes</label>
+                                        <textarea th:field="*{notes}" class="form-control shadow-sm" rows="3" 
+                                                  placeholder="Provide a reason or reference number (optional)..."></textarea>
+                                    </div>
+
+                                    <div class="col-12 mt-5 text-end">
+                                        <hr class="mb-4">
+                                        <a href="/employee/dashboard" class="btn btn-light border px-4 me-2">
+                                            Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-submit px-5 shadow-sm">
+                                            <i class="fas fa-save me-2"></i> Save & Execute Transaction
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 shadow-sm mt-4 p-3" style="border-radius: 12px;">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Standard Operating Procedure:</h6>
+                                <p class="small mb-0">Ensure that physical counts match the input quantity. Once a transaction is saved, it will immediately affect stock levels and be logged in your history for auditing.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle for Mobile Devices
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth <= 768 && !sidebar.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // === Confirmation Dialog Before Submitting Transaction ===
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form[action*="transactions/add"]');
+            if (!form) return;
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // إيقاف الإرسال مؤقتاً
+
+                // جلب المعلومات من الفورم
+                const productSelect = form.querySelector('select[name="product.id"]');
+                const typeSelect = form.querySelector('select[name="transactionType"]');
+                const quantityInput = form.querySelector('input[name="quantity"]');
+
+                const productName = productSelect && productSelect.selectedIndex > 0 
+                    ? productSelect.options[productSelect.selectedIndex].text 
+                    : 'Not selected';
+                const typeName = typeSelect 
+                    ? typeSelect.options[typeSelect.selectedIndex].text 
+                    : 'Unknown';
+                const quantity = quantityInput ? quantityInput.value : '0';
+
+                // التحقق من الحقول المطلوبة
+                if (!productSelect || productSelect.value === '' || !quantityInput || quantityInput.value === '' || parseInt(quantityInput.value) < 1) {
+                    form.reportValidity();
+                    return;
+                }
+
+                // عرض رسالة التأكيد
+                const message = `⚠️ Please confirm this transaction:\n\n` +
+                    `📦 Product: ${productName}\n` +
+                    `📋 Type: ${typeName}\n` +
+                    `🔢 Quantity: ${quantity}\n\n` +
+                    `Are you sure you want to proceed?`;
+
+                if (confirm(message)) {
+                    form.submit(); // إرسال الفورم فقط إذا وافق المستخدم
+                }
+            });
+        });
+    </script>
+</body>
+</html>
